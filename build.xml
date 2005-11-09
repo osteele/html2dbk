@@ -1,0 +1,160 @@
+<!-- This build file won't work on your machine.  It uses too many
+absolute pathnames.  I'm including it in case it's useful to you
+as a starting point -->
+<project default="build">
+  <taskdef resource="net/sf/antcontrib/antcontrib.properties"/>
+  <property file="build.properties"/>
+  
+  <path id="saxon.processor.classpath">
+    <pathelement path="${saxon.location}" />
+    <pathelement path="${xercesImpl.dir}/xercesImpl.jar"/>
+    <pathelement path="${docbook-xsl}/extensions/saxon651.jar" />
+  </path>
+  
+  <path id="classpath.fop">
+    <pathelement path="${fop.dir}/fop.jar"/>
+    <pathelement path="${xerces.dir}/xerces.jar"/>
+    <pathelement path="${fop.dir}/batik.jar"/>
+    <pathelement path="${fop.dir}/avalon-framework-cvs-20020806.jar"/>
+  </path>
+  
+  <xmlcatalog id="commonDTDs">
+    <dtd publicId="-//W3C//DTD XHTML 1.0 Transitional//EN"
+         location="${dtds}/xhtml1-transitional.dtd"/>
+  </xmlcatalog>
+  
+  <target name="db">
+    <!-- The output depends on these, but the style task doesn't know this,
+         so delete them manually -->
+    <outofdate>
+      <sourcefiles>
+        <fileset dir="." includes="html2db.xsl,html2db-common.xsl,html2db-utils.xsl"/>
+      </sourcefiles>
+      <targetfiles path="index.xml"/>
+      <sequential>
+        <delete file="index.xml"/>
+      </sequential>
+    </outofdate>
+    <style style="example.xsl"
+           in="index.src.html"
+           out="index.xml">
+      <xmlcatalog refid="commonDTDs"/>
+    </style>
+  </target>
+  
+  <target name="saxon">
+    <java classname="com.icl.saxon.StyleSheet"
+          fork="yes" 
+          failonerror="true">
+      <classpath refid="saxon.processor.classpath" />
+      <!--jvmarg value="-Djavax.xml.parsers.DocumentBuilderFactory=org.apache.xerces.jaxp.DocumentBuilderFactoryImpl"/>
+      <jvmarg value="-Djavax.xml.parsers.SAXParserFactory=org.apache.xerces.jaxp.SAXParserFactoryImpl"/>
+      <jvmarg value="-Dorg.apache.xerces.xni.parser.XMLParserConfiguration=org.apache.xerces.parsers.XIncludeParserConfiguration"/-->
+      <arg line="-o index.xml"/>
+      <arg line="index.src.html"/>
+      <arg line="example.xsl"/>
+    </java>
+  </target>
+  
+  <target name="just-html">
+    <style style="${docbook}/html/docbook.xsl"
+           in="index.xml"
+           out="index.html">
+      <param name="shade.verbatim" expression="1"/>  
+      <param name="make.valid.html" expression="1"/>
+    </style>
+  </target>
+  
+  <target name="html" depends="db,just-html"/>
+  
+  <target name="chunk" depends="db">
+    <mkdir dir="docs"/>
+    <style style="${docbook}/html/chunk.xsl"
+           in="index.xml"
+           out="docs/index.html">
+      <param name="shade.verbatim" expression="1"/>  
+    </style>
+  </target>
+  
+  <target name="pdf" depends="db">
+    <style style="${docbook}/fo/docbook.xsl"
+           in="index.xml"
+           out="index.fo">
+      <param name="shade.verbatim" expression="1"/>  
+      <param name="fop.extensions" expression="1"/>
+    </style>
+    <outofdate>
+      <sourcefiles>
+        <fileset dir="." includes="index.fo"/>
+      </sourcefiles>
+      <targetfiles>
+        <fileset dir="." includes="html2db.pdf"/>
+      </targetfiles>
+      <sequential>
+        <java classname="org.apache.fop.apps.Fop"
+              fork="yes"
+              failonerror="true">
+          <classpath refid="classpath.fop"/>
+          <arg line="-fo index.fo"/>
+          <arg line="-pdf html2db.pdf"/>
+        </java>
+      </sequential>
+    </outofdate>
+  </target>
+  
+  <target name="docs" depends="html,chunk,pdf"/>
+  
+  <target name="zip" depends="docs">
+    <zip destfile="build/html2db.zip">
+      <!-- html2db source -->
+      <fileset dir="." includes="*.xsl,index.src.html"/>
+      <fileset dir="." includes="*.xsl,index.src.html,LICENSE.txt"/>
+      <!-- build source -->
+      <fileset dir="." includes="build.xml,tidy.properties"/>
+      <!-- generated docs -->
+      <fileset dir="." includes="index.xml,index.html,html2db.pdf"/>
+      <fileset dir="docs"/>
+    </zip>
+  </target>
+  
+  <target name="build" depends="zip"/>
+  
+  <target name="sitedocs" depends="chunk">
+    <exec executable="tidy">
+      <arg line="-config tidy.properties -o build/index.html docs/index.html"/>
+    </exec>
+    <mkdir dir="build/sitedocs"/>
+    <style style="extract-toc.xsl"
+           in="build/index.html"
+           out="build/sitedocs/index.html">
+      <xmlcatalog refid="commonDTDs"/>
+    </style>
+    <copy todir="build/sitedocs">
+      <fileset dir="docs" includes="*" excludes="index.html"/>
+    </copy>
+  </target>
+  
+  <target name="stage" depends="zip,sitedocs">
+    <property file="build.properties"/>
+    <echo message="${docbook}"/>
+    <echo message="${htdocs}"/>
+    <copy file="build/html2db.zip" todir="${htdocs}/sources"/>
+    <copy todir="${htdocs}/software/xslt/html2db">
+      <fileset dir="." includes="*.xsl,index.src.html,build.xml"/>
+      <fileset dir="." includes="index.xml,html2db.pdf"/>
+      <fileset dir="build/sitedocs"/>
+    </copy>
+    <copy tofile="${htdocs}/software/xslt/html2db/onepage.html"
+          file="index.html"/>
+  </target>
+  
+  <target name="clean">
+    <delete>
+      <fileset dir="." includes="index.fo"/>
+      <fileset dir="." includes="index.xml,index.html,index.fo,html2db.pdf"/>
+      <fileset dir="build"/>
+      <fileset dir="docs"/>
+    </delete>
+  </target>
+  
+</project>

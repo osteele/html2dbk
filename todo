@@ -1,0 +1,40 @@
+Metadata:
+ <meta name="DC.Subject" lang="en" content="server,http, uri, cache, content-negotiation" />
+ <meta name="DC.Title" lang="en" content="Common HTTP Implementation Problems" />
+ <meta name="DC.Description.Abstract" lang="en" content="Better understanding 
+  server-side Web technologies to avoid misusing them" />
+ <meta name="DC.Date.Created" content="2002-08-22" />
+ <meta name="DC.Language" scheme="RFC1766" content ="en" />
+ <meta name="DC.Creator" content="Olivier Thereaux" />
+ <meta name="DC.Publisher" content="W3C - World Wide Web Consortium - http://www.w3.org" />
+ <meta name="DC.Rights" content="http://www.w3.org/Consortium/Legal/" />
+
+
+
+Todo:
+
+Publish:
+- add to http://wiki.docbook.org/topic/DocBookTools
+- new page http://wiki.docbook.org/topic/DocBookTools
+- Html2Db converts XHTML (open source)
+
+Html2Db:
+Convert all of your HTML to XHTML using Tidy 
+http://wiki.docbook.org/topic/Html2DocBook
+
+To integrate back:
+- turn h:glossterm|h:indexterm into db elements
+- change namespace
+- <xsl:param name="$anchor-id-prefix" select="concat($docid, '.')"/>
+-  <xsl:template match="processing-instruction('doc2html')"/>
+- onclick
+- <?doc2html rowsep?> -> <?db2html rowsep?>
+
+Tables work well, including the colspan and rowspan attributes. The align attribute doesn't do anything, but that will be easy to add if / when the need arises. <th> works exactly as <td>. Again, easy to fix when necessary. The first row becomes a header row, which causes problems when you have tables with only one row. The width attributes are all ignored, because the only way to deal with them correctly would require an extension function like Norm's.
+
+The first <h1> or <h2> becomes the section title
+
+Tables
+Headers
+Links
+Graphics

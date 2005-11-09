@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<article>
+
+<title>html2db.xsl</title>
+
+
+<articleinfo>
+  <author>
+    <firstname>Oliver</firstname>
+    <surname>Steele</surname>
+  </author>
+  <revhistory>
+    <revision>
+      <revnumber>1</revnumber>
+      <date>2004-07-30</date>
+    </revision>
+    <revision>
+      <revnumber>1.0.1</revnumber>
+      <date>2004-08-01</date>
+      <revdescription><para>Editorial changes to the
+      readme.</para></revdescription>
+    </revision>
+  </revhistory>
+  <date>2004-07-30</date>
+</articleinfo>
+
+<para/><section><title>Overview</title>
+
+<para><literal>html2db.xsl</literal> converts an XHTML source document into a Docbook output
+document.  It provides features for customizing the generation of the
+output, so that the output can be tuned by annotating
+the source, rather than hand-editing the output.  This makes it useful
+in a processing pipeline where the source documents are maintained in
+HTML, although it can be used as a one-time conversion tool
+too.</para>
+
+<para>This document is an example of <literal>html2db.xsl</literal> used in conjunction with
+the Docbook XSL stylesheets.  The <ulink url="index.src.html">source
+file</ulink> is an XHTML file with some embedded Docbook elements and
+processing instructions.  <literal>html2db.xsl</literal> compiles it into a <ulink url="index.xml">Docbook document</ulink>, which can be used to generate
+this output file (which includes a Table of Contents), a <ulink url="docs/index.html">chunked HTML file</ulink>, a <ulink url="html2db.pdf">PDF</ulink>, or other formats.</para>
+
+<para/></section><section><title>Features</title>
+<variablelist><varlistentry><term>XSLT implementation</term><listitem><para>This tool is designed to be embedded within an XSLT processing
+pipeline.  <literal>html2html.xslt</literal> can be used in a custom
+stylesheet or integrated into a larger system.  See <link linkend="embedding">Overriding</link>.</para></listitem></varlistentry><varlistentry><term>Customizable</term><listitem><para>The output can be customized by the means of additonal markup in
+the XHMTL source.  See the section on <link linkend="customization">customization</link>.</para></listitem></varlistentry><varlistentry><term>Creates outline structure</term><listitem><para><literal>h1</literal>, <literal>h2</literal>, etc. are turned into nested
+<literal>section</literal> and <literal>title</literal> elements (as opposed to
+bridge heads).</para></listitem></varlistentry><varlistentry><term>Accepts a wide variety of XHTML</term><listitem><para>In particular, <literal>html2db.xsl</literal> automatically wraps <indexterm significance="preferred"><primary>naked item
+text</primary></indexterm><glossterm>naked item
+text</glossterm> (text that is not enclosed in a <literal>&lt;p&gt;</literal>)
+inside a table cell or list item.  Naked text is a common property of
+XHTML documents, but needs to be clothed to create valid
+Docbook.<footnote><para>This feature is limited.  See <link linkend="implicit-blocks">Implicit Blocks</link>.)</para></footnote></para></listitem></varlistentry></variablelist>
+
+<para/></section><section><title>Requirements</title>
+<itemizedlist spacing="compact"><listitem><para>Java: JRE or JDK 1.3 or greater.</para></listitem><listitem><para>Xalan 2.5.0.</para></listitem><listitem><para>Familiarity with installing and running JAR files.</para></listitem></itemizedlist>
+
+<para><literal>html2db.xsl</literal> might work with earlier versions of Java and Xalan, and
+it might work with other XSLT processors such as Saxon and
+xsltproc.</para>
+
+<para/></section><section><title>License</title>
+<para>This software is released under the Open Source <ulink url="http://www.opensource.org/licenses/artistic-license.php">Artistic License</ulink>.</para>
+
+<para/></section><section><title>Installation</title>
+<itemizedlist spacing="compact"><listitem><para>Install JRE 1.3 or higher.</para></listitem><listitem><para>Install Xalan, if necessary.</para></listitem><listitem><para>Download <literal>html2db-1.zip</literal> from <ulink url="http://osteele.com/sources/html2db.zip">http://osteele.com/sources/html2db-1.zip</ulink>.</para></listitem><listitem><para>Unzip <literal>html2db-1.zip</literal>.</para></listitem></itemizedlist>
+
+<para/></section><section><title>Usage</title>
+<para>Use Xalan to process an XHTML source file into a Docbook file:</para>
+
+<informalexample><programlisting>
+java org.apache.xalan.xslt.Process -XSL html2dbk.xsl -IN doc.html &gt; doc.xml
+</programlisting></informalexample>
+
+<para>See <ulink url="index.src.html"><literal>index.src.html</literal></ulink> for an
+example of an input file.</para>
+
+<para>If your source files are in HTML, not XHTML, you may find the <ulink url="http://tidy.sourceforge.net/">Tidy</ulink> tool useful.  This is a
+tool that converts from HTML to XHTML, and can be added to the front
+of your processing pipeline.</para>
+
+<para>(If you need to process HTML and you don't know or can't figure out
+from context what a processing pipeline is, <literal>html2db.xsl</literal> is probably not
+the right tool for you, and you should look for a local XML or Java
+guru or for a commercially supported product.)</para>
+
+<para/></section><section><title>Specification</title>
+
+<para/><section><title>XHTML Elements</title>
+<para><literal>code/i</literal> stands for "an <literal>i</literal> element
+immediately within a <literal>code</literal> element".  This notation is
+from XPath.</para>
+
+<para>XHTML elements must be in the XHTML Transitional namespace,
+<literal>http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd</literal>.</para>
+
+<informaltable><tgroup cols="3"><thead><row><entry>XHTML</entry><entry>Docbook</entry><entry>Notes</entry></row>
+</thead><tbody><row><entry><literal>b</literal>, <literal>i</literal>, <literal>em</literal>, <literal>strong</literal></entry><entry><literal>emphasis</literal></entry><entry>The <literal>role</literal> attribute is the original tag name</entry></row>
+<row><entry><literal>dfn</literal></entry><entry><literal>glossitem</literal>, and also <literal>primary</literal> <literal>indexterm</literal></entry></row>
+<row><entry><literal>code/i</literal>, <literal>tt/i</literal>, <literal>pre/i</literal></entry><entry><literal>replaceable</literal></entry><entry>In practice, <literal>i</literal> within a monospace content is usually used to mean replaceable text.  If you're using it for emphasis, use <literal>em</literal> instead.</entry></row>
+<row><entry><literal>pre</literal>, <literal>body/code</literal></entry><entry><literal>programlisting</literal></entry></row>
+<row><entry><literal>img</literal></entry><entry><literal>inlinemediaobject/imageobject/imagedata</literal></entry><entry>In an inline context.</entry></row>
+<row><entry><literal>img</literal></entry><entry><literal>[informal]figure/mediaobject/imageobject/imagedata</literal></entry><entry>If it has a <literal>title</literal> attribute or <literal>db:title</literal> it's wrapped in a <literal>figure</literal>.  Otherwise it's wrapped in an <literal>informalfigure</literal>.</entry></row>
+<row><entry><literal>table</literal></entry><entry><literal>[informal]table</literal></entry><entry>XHTML <literal>table</literal> becomes Docbook <literal>table</literal> if it has a <literal>summary</literal> attribute; <literal>informaltable</literal> otherwise.</entry></row>
+<row><entry><literal>ul</literal></entry><entry><literal>itemizedlist</literal></entry><entry>But see the processing instruction <link linkend="simplelist">below</link>.</entry></row>
+</tbody></tgroup></informaltable>
+
+
+
+<para/></section><section><title>Links</title>
+<table><title>Link Translation</title><tgroup cols="3"><thead><row><entry>XHTML</entry><entry>Docbook</entry><entry>Notes</entry></row>
+</thead><tbody><row><entry><literal>&lt;a name="<replaceable>name</replaceable>"&gt;</literal></entry><entry><literal>&lt;anchor id="{$anchor-id-prefix}<replaceable>name</replaceable>"&gt;</literal></entry><entry>An anchor within a <literal>h<replaceable>n</replaceable></literal> element is attached to the enclosing <literal>section</literal> as an <literal>id</literal> attribute instead.</entry></row>
+<row><entry><literal>&lt;a href="#<replaceable>name</replaceable>"&gt;</literal></entry><entry><literal>&lt;link linkend="{$anchor-id-prefix}<replaceable>name</replaceable>"&gt;</literal></entry></row>
+<row><entry><literal>&lt;a href="<replaceable>url</replaceable>"&gt;</literal></entry><entry><literal>&lt;ulink url="<replaceable>name</replaceable>"&gt;</literal></entry></row>
+<row><entry><literal>&lt;a name="mailto:<replaceable>address</replaceable>"&gt;</literal></entry><entry><literal>&lt;email&gt;<replaceable>address</replaceable>&lt;/email&gt;</literal></entry></row>
+</tbody></tgroup></table>
+
+<para/></section><section id="tables"><title>Tables</title>
+
+<para>XHTML <literal>table</literal> support is minimal.  <literal>html2db.xsl</literal> changes the
+element names and counts the columns (this is necessary to get table
+footnotes to span all the columns), but it does not attempt to deal
+with tables in their full generality.</para>
+
+<para>An XHTML <literal>table</literal> with a <literal>summary</literal> attribute
+generates a <literal>table</literal>, whose <literal>title</literal> is the value
+of that summary.  An XHTML <literal>table</literal> without a
+<literal>summary</literal> generates an <literal>informaltable</literal>.</para>
+
+<para>Any <literal>tr</literal>s that contain <literal>th</literal>s are pulled to
+the top of the table, and placed inside a <literal>thead</literal>.  Other
+<literal>tr</literal>s are placed inside a <literal>tbody</literal>.  This matches
+the commanon XHTML <literal>table</literal> pattern, where the first row is
+a header row.</para>
+
+<para/></section><section id="implicit-blocks"><title>Implicit Blocks</title>
+<para>XHTML allows <literal>li</literal>, <literal>dd</literal>, and <literal>td</literal>
+elements to contain either inline text (for instance,
+<literal>&lt;li&gt;a list item&lt;/li&gt;</literal>) or block structure
+(<literal>&lt;li&gt;&lt;p&gt;a block&lt;/p&gt;&lt;/li&gt;</literal>).  The
+corresponding Docbook elements require block structure, such as
+<literal>para</literal>.</para>
+
+<para><literal>html2db.xsl</literal> provides limited support for wrapping naked text in
+these positions in <literal>para</literal> elements.  If a list item or
+table cell item directly contains text, all text up to the position of
+the first element (or all text, if there is no element) is wrapped in
+<literal>para</literal>.  This handles the simple case of an item that
+directly contains text, and also the case of an item that contains
+text followed by blocks such as paragraphs.</para>
+
+<para>Note that this algorithm is easily confused.  It doesn't
+distinguish between block and inline XHTML elements, so it will only
+wrap the first word in <literal>&lt;li&gt;some &lt;b&gt;bold&lt;/b&gt;
+text&lt;/li&gt;</literal>, leading to badly formatted output.  Twhe
+workaround is to wrap troublesome content in explicit
+<literal>&lt;p&gt;</literal> tags.</para>
+
+<para/></section><section id="docbook-elements"><title>Docbook Elements</title>
+
+<para>Elements from the Docbook namespace are passed through as is.
+There are two ways to include a Docbook element in your XHTML
+source:</para>
+
+<variablelist><varlistentry><term>Global prefix</term><listitem><para>A <indexterm significance="preferred"><primary>fake Docbook namespace</primary></indexterm><glossterm>fake Docbook namespace</glossterm><footnote><para>The fake
+Docbook namespace is <literal>urn:docbook</literal>.  Docbook doesn't really
+have a namespace, and if it did, it wouldn't be this one.  See <link linkend="docbook-namespace">Docbook namespace</link> for a discussion of
+this issue.</para></footnote>
+
+declaration may be added to the document root element.  Anywhere in
+the document, the prefix from this namespace declaration may be used
+to include a Docbook element.  This is useful if a document contains
+many Docbook elements, such as <literal>footnote</literal> or
+<literal>glossterm</literal>, interspersed with XHTML.  (In this case it may
+be more convenient to allow these elements in the XHMTL namespace and
+add a customization layer that translates them to docbook elements,
+however.  See <link linkend="customization">Customization</link>.)</para>
+
+<informalexample><programlisting>
+&lt;html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:db="urn:docbook"&gt;
+  ...
+  &lt;p&gt;Some text&lt;db:footnote&gt;and a footnote&lt;/db:footnote&gt;.&lt;/p&gt;
+</programlisting></informalexample></listitem></varlistentry><varlistentry><term>Local namespace</term><listitem><para>A Docbook element may be introduced along with a prefix-less
+namespace declaration.  This is useful for embedding a Docbook
+document fragment (a hierarchy of elements that all use Docbook tags)
+within of a XHTML document.</para>
+
+<informalexample><programlisting>
+  ...
+  &lt;articleinfo xmlns="urn:docbook"&gt;
+    &lt;author&gt;
+      &lt;firstname&gt;...&lt;/firstname&gt;
+  ...
+</programlisting></informalexample></listitem></varlistentry></variablelist>
+
+<para>The source to <ulink url="index.src.html">this document</ulink>
+illustrates both of these techniques.</para>
+
+<note><para>Both these techniques will cause your document to be
+invalid as XHTML.  In order to validate an XHTML document that
+contains Docbook elements, you will need to create a custom schema.
+Technically, you then ought to place your document in a different
+namespace, but this will cause <literal>html2db.xsl</literal> not to recognize it!</para></note>
+
+
+<para/></section><section><title>Output Processing Instructions</title>
+
+<para><literal>html2db.xsl</literal> adds a few of processing instructions to the output file.
+The Docbook XSL stylesheets ignore these, but if you write a
+customization layer for Docbook XSL, you can use the information in
+these processing instructions to customize the HTML output.  This can
+be used, for example, to set the <literal>a</literal> <literal>onclick</literal>
+and <literal>target</literal> attributes in the HTML files that Docbook XSL
+creates to the same values they had in the input document.</para>
+
+<variablelist><varlistentry><term><literal>&lt;?html2db attribute="<replaceable>name</replaceable>" value="<replaceable>value</replaceable>"?&gt;</literal></term><listitem><para>Placed inside a link element to capture the value of the <literal>a</literal> <literal>target</literal> and <literal>onclick</literal> attributes.  <replaceable>name</replaceable> is the name of the attribute (<literal>target</literal> or <literal>onclick</literal>), and <replaceable>value</replaceable> is its value, with <literal>"</literal> and <literal>\</literal> replaced by <literal>\"</literal> and <literal>\\</literal>, respectively.</para></listitem></varlistentry><varlistentry><term><literal>&lt;?html2db element="br"?&gt;</literal></term><listitem><para>Represents the location of an XHTML <literal>br</literal> element in the
+source document.</para></listitem></varlistentry></variablelist>
+
+<para>You can also include <literal>&lt;?db2html?&gt;</literal> processing
+instructions in the HTML source document, and they will be copied
+through to the Docbook output file unchanged (as will all other
+processing instructions).</para>
+
+
+<para/></section></section><section id="customization"><title>Customization</title>
+<para/><section><title>XSLT Parameters</title>
+<variablelist><varlistentry><term><literal>&lt;xsl:param name="anchor-id-prefix" select="''/&gt;</literal></term><listitem><para>Prefixed to every id generated from <literal>&lt;a name=&gt;</literal>
+  and <literal>&lt;a href="#"&gt;</literal>.  This is useful to avoid
+  collisions between multiple documents that are compiled into the
+  same book.  For instance, if a number of XHTML sources are assembled
+  into chapters of a book, you style each source file with a prefix of
+  <literal><replaceable>docid</replaceable>.</literal> where <replaceable>docid</replaceable> is a unique id
+  for each source file.</para></listitem></varlistentry><varlistentry><term><literal>&lt;xsl:param name="document-root" select="'article'"/&gt;</literal></term><listitem><para>The default document root.  This can be overridden by
+  <literal>&lt;?html2db class="<replaceable>name</replaceable>"&gt;</literal> within the
+  document itself, and defaults to <literal>article</literal>.</para></listitem></varlistentry></variablelist>
+
+<para/></section><section id="processing-instructions"><title>Processing instructions</title>
+<para>Use the <literal>&lt;?html2db?&gt;</literal> processing instruction to
+customize the transformation of the XHTML source to Docbook:</para>
+
+<informaltable><tgroup cols="3"><thead><row><entry>Processing instruction</entry><entry>Content</entry><entry>Effect</entry></row>
+</thead><tbody><row><entry><literal>&lt;?html2db class="<replaceable>xxx</replaceable>"?&gt;</literal></entry><entry><literal>body</literal></entry><entry>Sets the output document root to <replaceable>xxx</replaceable>.  Useful for
+translating to <literal>prefix</literal>, <literal>appendix</literal>, or <literal>chapter</literal>; the default is
+<replaceable>$document-root</replaceable>.</entry></row>
+<row id="simplelist"><entry><literal>&lt;?html2db class="simplelist"?&gt;</literal></entry><entry><literal>ul</literal></entry><entry>Creates a vertical <literal>simplelist</literal>.<footnote><para>Note that the
+current implementation simply checks for the presence of <emphasis role="em">any</emphasis>
+<literal>html2db</literal> processing instruction.</para></footnote></entry></row>
+<row><entry><literal>&lt;?html2db rowsep="1"?&gt;</literal></entry><entry><literal>[informal]table</literal></entry><entry>Sets the <literal>rowsep</literal> attribute on the generated <literal>table</literal>.<footnote><para>Note that the current implementation simply checks for the presence of <emphasis role="em">any</emphasis> <literal>html2db</literal> processing instruction that begins with <literal>rowsep</literal>, and assumes the vlaue is <literal>1</literal>.</para></footnote></entry></row>
+</tbody></tgroup></informaltable>
+
+<para/></section><section id="embedding"><title>Overriding the built-in templates</title>
+<para>For cases where the previous techniques don't allow for enough
+customization, you can override the builtin templates.  You will need
+to know XSLT in order to do this, and you will need to write a new
+stylesheet that uses the <literal>xsl:import</literal> element to import
+<literal>html2db.xsl</literal>.</para>
+
+<para>The <ulink url="examples.xsl"><literal>example.xsl</literal></ulink> stylesheet
+is an example customization layer.  It recognizes the <literal>&lt;div
+class="abstract"&gt;</literal> and <literal>&lt;p class="note"&gt;</literal>
+classes in the <ulink url="index.src.html">source</ulink> for this document,
+and generates the corresponding Docbook elements.</para>
+
+
+<para/></section></section><section><title>FAQ</title>
+<para/><section><title>Why generate Docbook?</title>
+<para>The primary reason to use Docbook as an <emphasis role="em">output</emphasis> format is
+to take advantage of the Docbook XSL stylesheets.  These are a
+well-designed, well-documented set of XSL stylesheets that provide a
+variety of publishing features that would be difficult to recreate
+from scratch for HTML:</para>
+
+<itemizedlist spacing="compact"><listitem><para>Automatic Table-of-Contents generation</para></listitem><listitem><para>Automatic part, chapter, and section numbering.</para></listitem><listitem><para>Creation of single-page, multi-page, PDF, and WinHelp files from the same source document.</para></listitem><listitem><para>Navigation headers, footers, and metadata for multi-page HTML
+documents.</para></listitem><listitem><para>Link resolution and link target text insertion across multiple pages and numbered targets.</para></listitem><listitem><para>Figure, example, and table numbering, and tables of these.</para></listitem><listitem><para>Index and glossary tools.</para></listitem></itemizedlist>
+
+<para/></section><section><title>Why write in XHTML?</title>
+
+<para>Given that Docbook is so great, why not write in it?</para>
+
+<para>Where there are not legacy concerns, Docbook is probably a better
+choice for structured or technical documentation.</para>
+
+<para>Where the only legacy concern is the documents themselves, and not
+the tools and skill sets of documentation contributors, you should
+consider using an (X)HMTL convertor to perform a one-time conversion
+of your documentation source into Docbook, and then switching
+development to the result files.  You can use this stylesheet to
+perform this conversion, or evaluate other tools, many of which are
+probably appropriate for this purpose.</para>
+
+<para>Often there are other legacy concerns: the availability of cheap
+(including free) and usable HTML editors and editing modes; and the
+fact that it's easier to teach people XHTML than Docbook.  If either
+of this is an issue in your organization, you may want to maintain
+documentation sources in XHTML instead of Docbook</para>
+
+<para>For example, at <ulink url="http://www.laszlosystems.com/">Laszlo</ulink>,
+most developers contribute directly to the documentation.  Requiring
+that developers learn Docbook, or that they wait on the doc team to
+get content into the docs, would discourage this.</para>
+
+<para/></section><section><title>Why not use an existing convertor?</title>
+
+<para>This isn't the first (X)HTML to Docbook convertor.  Why not use one
+of the exisitng ones?</para>
+
+<para>Each HTML to Docbook convertors that I could find had at least some
+of the following limitations, some of which stemmed from their
+intended use as one-time-only convertors for legacy documents:</para>
+
+<itemizedlist spacing="compact"><listitem><para>Many only operated on a subset of HTML, and relied upon hand
+editing of the output to clean up mistakes.  This made them impossible
+to use as part of a processing pipeline, where the source is
+<emphasis role="em">maintained</emphasis> in XHTML.</para></listitem><listitem><para>There was no way to customize the output, except by (1) hand
+editing, or (2) writing a post-processing stylesheet, which didn't
+have access to the information in the XHTML source document.</para></listitem><listitem><para>Many of them were difficult or impossible to customize and
+extend. They were closed-source, or written in Java or Perl (which I
+find to be a difficult languages to use for customizing this kind of
+thing) and embedded in a larger system.</para></listitem><listitem><para>They didn't take full advantage of the Docbook tag set and content
+model to represent document structure.  For instance, they didn't
+generate nested <literal>section</literal> elements to represent
+<literal>h1</literal> <literal>h2</literal> sequences, or <literal>table</literal> to
+represent tables with <literal>summary</literal> attributes.</para></listitem></itemizedlist>
+
+<para/></section><section><title>I got this error.  What does it mean?</title>
+<variablelist><varlistentry><term>Q. <literal>Fatal Error! The element type "br" must be terminated by the matching end-tag "&lt;/br&gt;".
+</literal></term><listitem><para>A. Your document is HTML, not <emphasis role="em">X</emphasis>HTML.  You need to fix it, or run it through Tidy first.</para></listitem></varlistentry><varlistentry><term>Q. My output document is empty except for the <literal>&lt;?xml version="1.0" encoding="UTF-8"?&gt;</literal> line.</term><listitem><para>A. The document is missing a namespace declaration.  See the <ulink url="index.src.html">example</ulink> for an example.</para></listitem></varlistentry><varlistentry><term>Q. Some of the headers and document sections are repeated multiple times.</term><listitem><para>A. The document has out-of-sequence headers, such as <literal>h1</literal> followed by <literal>h3</literal> (instead of <literal>h2</literal>).  This won't work.</para></listitem></varlistentry><varlistentry><term>Q. <literal>Fatal Error! The prefix "db" for element "db:footnote" is not bound.</literal></term><listitem><para>A. You haven't declared the <literal>db</literal> namespace prefix.  See the <ulink url="index.src.html">example</ulink> for an example.</para></listitem></varlistentry></variablelist>
+
+
+<para/></section></section><section><title>Implementation Notes</title>
+
+<para/><section><title>Bugs</title>
+<itemizedlist spacing="compact"><listitem><para>Improperly sequenced <literal>h<replaceable>n</replaceable></literal> (for example
+<literal>h1</literal> followed by <literal>h3</literal>, instead of
+<literal>h2</literal>) will result in duplicate text.</para></listitem></itemizedlist>
+
+
+<para/></section><section><title>Limitations</title>
+<itemizedlist spacing="compact"><listitem><para>The <literal>id</literal> attribute is only preserved for certain
+elements (at least <literal>h<replaceable>n</replaceable></literal>, images, paragraphs, and
+tables).  It ought to be preserved for all of them.</para></listitem><listitem><para>Only the <link linkend="tables">very simplest</link> table format is
+implemented.</para></listitem><listitem><para>Always uses compact lists.</para></listitem><listitem><para>The string matching for <literal>&lt;?html2b
+class="<replaceable>classname</replaceable>"?&gt;</literal> requires an exact match
+(spaces and all).</para></listitem><listitem><para>The <link linkend="implicit-blocks">implicit blocks</link> code is easily
+confused, as documented in that section.  This is
+easy to fix now that I understand the difference between block and
+inline elements (I didn't when I was implementing this), but I
+probably won't do so until I run into the problem again.</para></listitem></itemizedlist>
+
+
+
+
+<para/></section><section><title>Wishlist</title>
+<itemizedlist spacing="compact"><listitem><para>Allow <literal>&lt;html2db attribute-name="<replaceable>name</replaceable>"
+value="<replaceable>value</replaceable>"?&gt;</literal> at any position, to set arbitrary
+Docbook attributes on the generated element.</para></listitem><listitem><para>Use different technique from the <link linkend="docbook-elements">fake
+namespace prefix</link> to name Docbook elements in the source, that
+preserves the XHTML validity of the source file. For example, an
+option transform <literal>&lt;div class="db:footnote"&gt;</literal> into
+<literal>&lt;footnote&gt;</literal>, or to use a processing attribute
+(<literal>&lt;div&gt;&lt;?html2db classname="footnote"?&gt;</literal>).</para></listitem><listitem><para>Parse DC metadata from XHTML <literal>html/head/meta</literal>.</para></listitem><listitem><para>Add an option to use <literal>html/head/title</literal> instead of
+<literal>html/body/h1[1]</literal> for top title.</para></listitem><listitem><para>Allow an <literal>id</literal> on every element.</para></listitem><listitem><para>Add an option to translate the XHTML <literal>class</literal> into a
+Docbook <literal>role</literal>.</para></listitem><listitem><para>Preserve more of the whitespace from the source document  especially within lists and tables  in order to make it easier to debug the output document.</para></listitem></itemizedlist>
+
+
+<para/></section><section><title>Design Notes</title>
+<para/><section id="docbook-namespace"><title>The Docbook Namespace</title>
+<para><literal>html2db.xsl</literal> accepts elements in the "Docbook namespace" in XHTML
+source.  This namespace is <literal>urn:docbook</literal>.</para>
+
+<para>This isn't technically correct.  Docbook doesn't really have a
+namespace, and if it did, it wouldn't be this one.  <ulink url="http://www.faqs.org/rfcs/rfc3151.html">RFC 3151</ulink> suggests
+<literal>urn:publicid:-:OASIS:DTD+DocBook+XML+V4.1.2:EN</literal> as the
+Docbook namespace.</para>
+
+<para>There two problems with the RFC 3151 namespace.  First, it's long
+and hard to remember.  Second, it's limited to Docbook v4.1.2 
+but <literal>html2db.xsl</literal> works with other versions of Docbook too, which would
+presumably have other namespaces.  I think it's more useful to
+<emphasis role="em">under</emphasis>specify the Docbook version in the spec for this tool.
+Docbook itself underspecifies the version completely, by avoiding a
+namespace at all, but when mixing Docbook and XHTML elements I find it
+useful to be <emphasis role="em">more</emphasis> specific than that.</para>
+
+<para/></section></section><section><title>History</title>
+<para>The original version of <literal>html2db.xsl</literal> was written by <ulink url="http://osteele.com">Oliver Steele</ulink>, as part of the <ulink url="http://laszlosystems.com">Laszlo Systems, Inc.</ulink> documentation
+effort.  We had a set of custom stylesheets that formatted and added
+linking information to programming-language elements such as
+<literal>classname</literal> and <literal>tagname</literal>, and added
+Table-of-Contents to chapter documentation and numbers examples.</para>
+
+<para>As the documentation set grew, the doc team (John Sundman)
+requested features such as inter-chapter navigation, callouts, and
+index and glossary elements.  I was able to beat all of these back
+except for navigation, which seemed critical.  After a few days trying
+to implement this, I decided it would be simpler to convert the subset
+of XHTML that we used into a subset of Docbook, and use the latter to
+add navigation.  (Once this was done, the other features came for
+free.)</para>
+
+<para>During my August 2004 "sabbatical", I factored the general html2db
+code out from the Laszlo-specific code, refactored and otherwise
+cleaned it up, and wrote this documentation.</para>
+
+<para/></section><section><title>Credits</title>
+<para><literal>html2db.xsl</literal> was written by <ulink url="http://osteele.com">Oliver Steele</ulink>, as part of the <ulink url="http://laszlosystems.com">Laszlo Systems, Inc.</ulink> documentation effort.</para>
+
+<para/></section></section></article>
